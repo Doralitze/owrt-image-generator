@@ -4,9 +4,12 @@ import subprocess
 
 from jinja2 import Template
 
-def render_file(content: str) -> str:
+def render_file(content: str, name: str) -> str:
     template = Template(str(content))
-    context = {"environment": os.environ}
+    context = {
+        "environment": os.environ,
+        "image_name": name
+    }
     return template.render(context)
 
 def build_image(config_dict):
@@ -26,7 +29,7 @@ def build_image(config_dict):
             f_path = os.path.join(files_path, f["path"])
             os.makedirs(os.path.dirname(f_path), exist_ok=True)
             with open(f_path, "w") as file:
-                file.write(render_file(["content"]))
+                file.write(render_file(f["content"], name))
         except Exception as e:
             logging.error("Failed to setup file {} due to {}.".format(str(f), str(e)))
             return name, False
@@ -34,7 +37,7 @@ def build_image(config_dict):
     logging.info("Creating device configuration data for {}.".format(name))
     with open(os.path.join(build_dir, ".config"), "w") as config_file:
         for setting in settings:
-            config_file.write(render_file(setting) + "\n")
+            config_file.write(render_file(setting, name) + "\n")
 
     logging.info("Unfolding device configuration")
     results = subprocess.run(["sh", "-c", "cd {} ; make defconfig >> {}/{}_build.log"
