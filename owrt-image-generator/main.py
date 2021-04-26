@@ -53,7 +53,7 @@ config = load_config(args.config_file)
 repo = "https://github.com/openwrt/openwrt.git"
 if config.get("repo"):
     repo = config["repo"]
-repo_path: str = pull_repo(args.build_directory, repo, config["branch"])
+repo_path: str = pull_repo(args.build_directory, repo, config["branch"], config["extra_feeds"])
 
 task_list = []
 

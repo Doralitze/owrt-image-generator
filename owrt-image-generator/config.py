@@ -11,6 +11,10 @@ def merge_config(template: Dict, device: Dict) -> Tuple[str, Dict]:
     merged_config = {"name": name}
     merged_config.update({"files": template.get("files")})
     merged_config.update({"settings": template.get("settings")})
-    merged_config.update({"files": device.get("files")})
-    merged_config.update({"settings": device.get("settings")})
+    if device.get("files"):
+        for f in device.get("files"):
+            merged_config["files"].append(f)
+    if device.get("settings"):
+        for s in device.get("settings"):
+            merged_config["settings"].append(s)
     return name, merged_config
