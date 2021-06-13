@@ -7,7 +7,8 @@ YAML. These scripts then build the cartesian product of templates and
 devices in order to get you your desired images.
 
 ## Ussage
-The following example shows how to build images:
+I assume that you already installed all required packages for building
+OpenWRT on the host. The following steps are required in order to build images:
 
 1. Create a folder on your hard disk and cd into it (the script will cludder
    the working directory a bit). The filesystem should have a couple GB
@@ -16,7 +17,9 @@ The following example shows how to build images:
 2. Clone this repo. (`git clone "https://github.com/Doralitze/owrt-image-generator.git" bin`)
 3. Place your build config inside this directory. An example config is shown below.
 4. Run the script (`python3 bin/owrt-image-generator/main.py -vvvvv`).
-5. Clean the build directory prior to the next build.
+5. After the script ran the generated images are locaed within the `out` directory within
+   their appropriate sub folder.
+6. Clean the build directory prior to the next build.
 
 ## Example config file
 ```yaml
