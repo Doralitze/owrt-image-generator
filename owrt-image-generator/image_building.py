@@ -28,7 +28,7 @@ def build_image(config_dict):
         try:
             proto_path = f["path"]
             if proto_path.startswith("/"):
-                proto_path = protopath[1:]
+                proto_path = proto_path[1:]
             f_path = os.path.join(files_path, proto_path)
             os.makedirs(os.path.dirname(f_path), exist_ok=True)
             with open(f_path, "w") as file:
