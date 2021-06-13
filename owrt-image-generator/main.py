@@ -98,7 +98,7 @@ if isinstance(config, list):
         no_errors &= compile_set(c_set, set_id=i)
         i += 1
 else:
-    no_errors = compile_set(config):
+    no_errors = compile_set(config)
 
 if no_errors:
     logging.info("Successfully compiled images. Goodbye.")
