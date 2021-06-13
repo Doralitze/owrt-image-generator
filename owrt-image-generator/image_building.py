@@ -16,8 +16,8 @@ def build_image(config_dict):
     name: str = config_dict["name"]
     files = config_dict["files"]
     settings = config_dict["settings"]
-    build_dir: str = config_dict["build_dir"]
-    output_directory: str = config_dict["out_dir"]
+    build_dir: str = os.path.abspath(config_dict["build_dir"])
+    output_directory: str = os.path.abspath(config_dict["out_dir"])
 
     os.makedirs(output_directory, exist_ok=True)
 
