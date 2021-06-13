@@ -26,7 +26,10 @@ def build_image(config_dict):
     os.makedirs(files_path, exist_ok=True)
     for f in files:
         try:
-            f_path = os.path.join(files_path, f["path"])
+            proto_path = f["path"]
+            if proto_path.startswith("/"):
+                proto_path = protopath[1:]
+            f_path = os.path.join(files_path, proto_path)
             os.makedirs(os.path.dirname(f_path), exist_ok=True)
             with open(f_path, "w") as file:
                 file.write(render_file(f["content"], name))
