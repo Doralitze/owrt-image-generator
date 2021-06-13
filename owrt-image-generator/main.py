@@ -74,25 +74,33 @@ def compile_set(config_set, set_id=None):
             task_list.append(device_config)
     
     logging.info("Starting compiling.")
+    no_errors: bool = True
     with Pool() as p:
         for name, success in p.map(build_image, task_list):
             if success:
                 logging.info("Successfully compiled image {}.".format(name))
             else:
+                no_errors = False
                 logging.info("Failed to compile image {}.".format(name))
+    return no_errors
 
 args = parse_arguments()
 setup_main_logger(args)
 config = load_config(args.config_file)
+
+no_errors: bool = True
 
 if isinstance(config, list):
     logging.info("Found multiple config sets.")
     i: int = 0
     for c_set in config:
         logging.info("Compiling set for " + str(c_set["branch"]))
-        compile_set(c_set, set_id=i)
-        i = i + 1
+        no_errors &= compile_set(c_set, set_id=i)
+        i += 1
 else:
-    compile_set(config)
+    no_errors = compile_set(config):
 
-logging.info("Successfully compiled images. Goodbye.")
+if no_errors:
+    logging.info("Successfully compiled images. Goodbye.")
+else:
+    logging.info("Finished compiling images. There were errors.")
