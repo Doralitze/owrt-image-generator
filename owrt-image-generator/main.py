@@ -45,35 +45,54 @@ def setup_main_logger(args: argparse.Namespace):
 
     logging.basicConfig(level=log_level, handlers=[file_handler, console])
 
+def compile_set(config_set, set_id=None):
+    repo = "https://github.com/openwrt/openwrt.git"
+    if config_set.get("repo"):
+        repo = config_set["repo"]
+    
+    build_directory: str = args.build_directory
+    if set_id is not None:
+        build_directory = os.path.join(build_directory, str(set_id))
+    
+    repo_path: str = pull_repo(build_directory, repo, config_set["branch"], config_set["extra_feeds"])
+
+    task_list = []
+
+    for template in config_set["templates"]:
+        for device in config_set["devices"]:
+            name, device_config = merge_config(template, device)
+            logging.info("Creating build environment for {}.".format(name))
+            build_path: str = os.path.join(build_directory, name)
+            output_directory: str = None
+            if set_id is None:
+                output_directory = os.path.join(args.output_directory, name)
+            else:
+                output_directory = os.path.join(args.output_directory, str(set_id), name)
+            shutil.copytree(repo_path, build_path)
+            device_config.update({"build_dir": build_path, "out_dir": output_directory})
+            logging.info("Scheduling {} for built.".format(name))
+            task_list.append(device_config)
+    
+    logging.info("Starting compiling.")
+    with Pool() as p:
+        for name, success in p.map(build_image, task_list):
+            if success:
+                logging.info("Successfully compiled image {}.".format(name))
+            else:
+                logging.info("Failed to compile image {}.".format(name))
 
 args = parse_arguments()
 setup_main_logger(args)
 config = load_config(args.config_file)
 
-repo = "https://github.com/openwrt/openwrt.git"
-if config.get("repo"):
-    repo = config["repo"]
-repo_path: str = pull_repo(args.build_directory, repo, config["branch"], config["extra_feeds"])
-
-task_list = []
-
-for template in config["templates"]:
-    for device in config["devices"]:
-        name, device_config = merge_config(template, device)
-        logging.info("Creating build environment for {}.".format(name))
-        build_path: str = os.path.join(args.build_directory, name)
-        output_directory: str = os.path.join(args.output_directory, name)
-        shutil.copytree(repo_path, build_path)
-        device_config.update({"build_dir": build_path, "out_dir": output_directory})
-        logging.info("Scheduling {} for built.".format(name))
-        task_list.append(device_config)
-
-logging.info("Starting compiling.")
-with Pool() as p:
-    for name, success in p.map(build_image, task_list):
-        if success:
-            logging.info("Successfully compiled image {}.".format(name))
-        else:
-            logging.info("Failed to compile image {}.".format(name))
+if isinstance(config, list):
+    logging.info("Found multiple config sets.")
+    i: int = 0
+    for c_set in config:
+        logging.info("Compiling set for " + str(c_set["branch"]))
+        compile_set(c_set, set_id=i)
+        i = i + 1
+else:
+    compile_set(config)
 
 logging.info("Successfully compiled images. Goodbye.")
