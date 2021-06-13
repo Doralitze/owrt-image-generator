@@ -12,6 +12,32 @@ def render_file(content: str, name: str) -> str:
     }
     return template.render(context)
 
+
+def search_and_copy_binaries(search_dir: str, copy_to: str):
+    def find_correct_subfolder(current_path: str):
+        dir_content = os.listdir(current_path)
+        further_directories = []
+        for f in dir_content:
+            if os.path.isdir(f):
+                further_directories.append(f)
+            else:
+                # Check if we've got the correct directory
+                if f == "config.buildinfo":
+                    return True, current_path
+        for d in further_directories:
+            success, directory = find_correct_subfolder(os.path.join(current_path, d))
+            if success:
+                return True, directory
+        return False, None
+    
+    success, directory = find_correct_subfolder(search_dir)
+    if success:
+        results = subprocess.run(["sh", "-c", "cp", "-r", "{}/*".format(os.path.abspath(directory)),
+                                  "{}".format(os.path.abspath(copy_to))], capture_output=False)
+        return results.returncode == 0
+    return False
+
+
 def build_image(config_dict):
     name: str = config_dict["name"]
     files = config_dict["files"]
@@ -49,6 +75,14 @@ def build_image(config_dict):
         logging.fatal("Failed to unfold device configuration. See errors below and within {}_build.log".format(name))
         logging.debug(results.stderr.decode())
         return name, False
+    
+    logging.info("Cleaning build directory")
+    results = subprocess.run(["sh", "-c", "cd {} ; make clean >> {}/{}_build.log"
+                             .format(build_dir, output_directory, name)], capture_output=True)
+    if results.returncode != 0:
+        logging.fatal("Failed to clean build directory. See errors below and within {}_build.log".format(name))
+        logging.debug(results.stderr.decode())
+        return name, False
 
     logging.info("Building device image")
     results = subprocess.run(["sh", "-c", "cd {} ; make -j1 V=s >> {}/{}_build.log"
@@ -57,5 +91,8 @@ def build_image(config_dict):
         logging.fatal("Failed to build device image. See errors below and within {}_build.log".format(name))
         logging.debug(results.stderr.decode())
         return name, False
+    else:
+        if not search_and_copy_binaries(os.path.join(build_dir, "bin", "targets"), output_directory):
+            logging.fatal("Failed to copy generated binaries. They've been build properly dough.")
 
     return name, True
