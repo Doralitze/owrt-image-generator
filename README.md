@@ -7,7 +7,7 @@ YAML. These scripts then build the cartesian product of templates and
 devices in order to get you your desired images.
 
 ## Ussage
-I assume that you already installed all required packages for building
+I assume that you already [installed all required packages](https://openwrt.org/docs/guide-developer/toolchain/install-buildsystem) for building
 OpenWRT on the host. The following steps are required in order to build images:
 
 1. Create a folder on your hard disk and cd into it (the script will cludder
